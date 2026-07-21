@@ -1,0 +1,16 @@
+{
+  "id": "G2-001.002",
+  "name": "Monorepo Base",
+  "version": "2.0.0-alpha.2",
+  "status": "APPLIED",
+  "validationRequired": true,
+  "workspaces": [
+    "@genesis/mobile",
+    "@genesis/runtime",
+    "@genesis/contracts",
+    "@genesis/core",
+    "@genesis/protocol",
+    "@genesis/sdk",
+    "@genesis/shared"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "id": "G2-001.2",
+  "name": "Estrutura Base do Monorepo",
+  "version": "2.0.0-alpha.1",
+  "status": "APPLIED",
+  "requiresApplicationStart": false
+}

@@ -1,0 +1,10 @@
+G2-001.002 — MONOREPO BASE
+
+1. Extraia todo o conteúdo sobre:
+D:\Projeto 2026\GENESIS 2.0
+
+2. Permita substituir package.json quando solicitado.
+
+3. No PowerShell, dentro da pasta do projeto, execute:
+npm install
+npm run validate
