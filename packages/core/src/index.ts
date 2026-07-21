@@ -8,3 +8,6 @@ export { HealthService } from './health/HealthService.js';
 export { EventBus } from './EventBus.js';
 export { EventSubscription } from './EventSubscription.js';
 export type { EventHandler } from './EventSubscription.js';
+export { LifecycleManager } from './lifecycle/index.js';
+export type { LifecycleState } from './lifecycle/LifecycleTransition.js';
+export { LifecycleStates } from './lifecycle/LifecycleTransition.js';
