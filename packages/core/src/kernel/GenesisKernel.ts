@@ -26,6 +26,20 @@ export class GenesisKernel implements IKernel {
     return this.registry.get(id);
   }
 
+  public getServices(): readonly IService[] {
+    return this.registry.getAll();
+  }
+
+  public unregister(serviceId: ServiceId): boolean {
+    const removed = this.registry.remove(serviceId);
+
+    if (removed) {
+      this.serviceStates.delete(serviceId.toString());
+    }
+
+    return removed;
+  }
+
   public registerService(service: IService): void {
     this.register(service);
   }

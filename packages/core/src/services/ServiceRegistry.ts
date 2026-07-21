@@ -27,6 +27,21 @@ export class ServiceRegistry {
     return undefined;
   }
 
+  public remove(id: ServiceId): boolean {
+    if (this.services.delete(id)) {
+      return true;
+    }
+
+    for (const key of this.services.keys()) {
+      if (key.equals(id)) {
+        this.services.delete(key);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public getAll(): readonly IService[] {
     return Array.from(this.services.values());
   }
