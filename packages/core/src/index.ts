@@ -5,3 +5,6 @@ export type CoreWorkspaceId = typeof workspaceId;
 export { GenesisKernel } from './kernel/GenesisKernel.js';
 export { ServiceRegistry } from './services/ServiceRegistry.js';
 export { HealthService } from './health/HealthService.js';
+export { EventBus } from './EventBus.js';
+export { EventSubscription } from './EventSubscription.js';
+export type { EventHandler } from './EventSubscription.js';
