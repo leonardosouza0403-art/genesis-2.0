@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import type { ConfigurationMap, ConfigurationValue } from './ConfigurationSchema.js';
 
 export enum ConfigurationSourceType {
@@ -111,13 +112,11 @@ function createSourceMap(source: ConfigurationMap): ReadonlyMap<string, Configur
 }
 
 function loadFileConfiguration(filePath: string): ConfigurationMap {
-  const fs = resolveFileSystem();
-
-  if (!fs.existsSync(filePath)) {
+  if (!existsSync(filePath)) {
     return Object.freeze({} as ConfigurationMap);
   }
 
-  const raw = fs.readFileSync(filePath, 'utf8');
+  const raw = readFileSync(filePath, 'utf8');
   const parsed = JSON.parse(raw);
 
   if (!isPlainObject(parsed)) {
@@ -151,29 +150,7 @@ function validateConfigurationValue(value: unknown): ConfigurationValue {
   throw new Error(`Unsupported configuration value type for value '${String(value)}'.`);
 }
 
-interface FsModule {
-  existsSync(path: string): boolean;
-  readFileSync(path: string, encoding: string): string;
-}
-
-function resolveFileSystem(): FsModule {
-  const requireCandidate = (globalThis as unknown as { require?: unknown }).require;
-
-  if (typeof requireCandidate === 'function') {
-    const fs = requireCandidate('fs') as unknown;
-
-    if (
-      typeof fs === 'object' &&
-      fs !== null &&
-      typeof (fs as FsModule).existsSync === 'function' &&
-      typeof (fs as FsModule).readFileSync === 'function'
-    ) {
-      return fs as FsModule;
-    }
-  }
-
-  throw new Error('FileConfigurationSource requires Node.js fs module access.');
-}
+// Compatibility note: using direct node:fs imports for ESM runtime and compiled dist environments.
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

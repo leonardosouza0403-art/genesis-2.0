@@ -17,3 +17,5 @@ export type { ModuleDependency } from './modules/ModuleDependency.js';
 export { createModuleDependency } from './modules/ModuleDependency.js';
 export { createModuleDescriptor } from './modules/ModuleDescriptor.js';
 export * from './config/index.js';
+export * from './scheduler/index.js';
+export * from './logging/index.js';

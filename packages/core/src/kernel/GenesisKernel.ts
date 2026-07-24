@@ -8,6 +8,9 @@ import { ModuleLoader } from '../modules/ModuleLoader.js';
 import { LifecycleManager } from '../lifecycle/LifecycleManager.js';
 import { LifecycleStates } from '../lifecycle/LifecycleTransition.js';
 import type { ModuleDescriptor } from '../modules/ModuleDescriptor.js';
+import { Scheduler } from '../scheduler/Scheduler.js';
+import { ConsoleLogger } from '../logging/ConsoleLogger.js';
+import { LogLevel } from '../logging/LogLevel.js';
 
 const KernelStartedEventType = 'KernelStarted' as const;
 const KernelStoppingEventType = 'KernelStopping' as const;
@@ -19,6 +22,8 @@ export class GenesisKernel implements IKernel {
   public readonly moduleLoader = new ModuleLoader();
   public readonly lifecycleManager = new LifecycleManager();
   public readonly eventBus = new EventBus();
+  public readonly scheduler = new Scheduler();
+  public readonly logger = new ConsoleLogger();
 
   private readonly registry = new ServiceRegistry();
   private readonly healthService = new HealthService();
@@ -105,7 +110,9 @@ export class GenesisKernel implements IKernel {
       return;
     }
 
+    this.logger.info('GenesisKernel', 'Booting kernel');
     this.configurationManager.getAll();
+    this.scheduler.start();
 
     const modules = this.moduleLoader.resolveInitializationOrder();
 
@@ -116,6 +123,7 @@ export class GenesisKernel implements IKernel {
     await this.initializeRemainingServices();
 
     this.initialized = true;
+    this.logger.info('GenesisKernel', 'Kernel boot completed');
     await this.publishEvent(KernelStartedEventType);
   }
 
@@ -132,7 +140,9 @@ export class GenesisKernel implements IKernel {
       return;
     }
 
+    this.logger.info('GenesisKernel', 'Shutting down kernel');
     await this.publishEvent(KernelStoppingEventType);
+    this.scheduler.stop();
 
     for (let index = this.startedServices.length - 1; index >= 0; index -= 1) {
       const service = this.startedServices[index]!;
@@ -140,9 +150,11 @@ export class GenesisKernel implements IKernel {
       const currentState = this.lifecycleManager.getState(moduleId);
 
       if (currentState === LifecycleStates.Running || currentState === LifecycleStates.Initializing) {
+        this.logger.debug('GenesisKernel', `Transitioning module '${moduleId.toString()}' to stopping`);
         this.lifecycleManager.transition(moduleId, LifecycleStates.Stopping);
       }
 
+      this.logger.debug('GenesisKernel', `Stopping service '${service.id.toString()}'`);
       await service.shutdown();
 
       if (this.lifecycleManager.getState(moduleId) === LifecycleStates.Stopping) {
@@ -153,6 +165,7 @@ export class GenesisKernel implements IKernel {
     this.startedServices.length = 0;
     this.configurationManager.clear();
     this.initialized = false;
+    this.logger.info('GenesisKernel', 'Kernel shutdown completed');
   }
 
   public async healthCheck(): Promise<HealthStatus> {
@@ -180,18 +193,22 @@ export class GenesisKernel implements IKernel {
       this.lifecycleManager.register(moduleId);
     }
 
+    this.logger.debug('GenesisKernel', `Transitioning module '${moduleId.toString()}' to initializing`);
     this.lifecycleManager.transition(moduleId, LifecycleStates.Initializing);
 
     const service = this.getServiceForModule(moduleId);
 
     try {
       if (service !== undefined) {
+        this.logger.info('GenesisKernel', `Initializing service for module '${moduleId.toString()}'`);
         await service.initialize(this);
         this.startedServices.push(service);
       }
 
+      this.logger.debug('GenesisKernel', `Transitioning module '${moduleId.toString()}' to running`);
       this.lifecycleManager.transition(moduleId, LifecycleStates.Running);
     } catch (error) {
+      this.logger.error('GenesisKernel', `Module '${moduleId.toString()}' failed during initialization`, { error: (error instanceof Error ? error.message : String(error)) });
       this.lifecycleManager.transition(moduleId, LifecycleStates.Failed);
       throw error;
     }

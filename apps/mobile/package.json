@@ -12,7 +12,11 @@
     "build": "tsc -p tsconfig.json",
     "clean": "powershell -NoProfile -Command \"Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue\"",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "test": "node -e \"console.log('Foundation workspace: no runtime tests required')\"",
+    "test": "npm --workspace @genesis/contracts run build && npm --workspace @genesis/core run build && npm run build && node --test --test-name-pattern=GenesisCompanion dist/__tests__/GenesisCompanion.test.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react-native": "^0.72.0"
   }
 }
