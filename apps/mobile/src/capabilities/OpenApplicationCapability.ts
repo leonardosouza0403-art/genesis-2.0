@@ -1,16 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { ApplicationCapability } from './ApplicationCapability.js';
-
-type IntentLauncherModule = { readonly launchApp: (packageName: string) => Promise<void> };
-
-type ReactNativeExports = {
-  readonly NativeModules: { readonly IntentLauncher?: IntentLauncherModule };
-  readonly Platform: { readonly OS: string };
-};
-
-function getReactNative(): Promise<ReactNativeExports> {
-  return import('react-native') as Promise<ReactNativeExports>;
-}
 
 export class OpenApplicationCapability extends ApplicationCapability {
   public readonly id = 'open-application';
@@ -26,24 +16,34 @@ export class OpenApplicationCapability extends ApplicationCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    const { NativeModules, Platform } = await getReactNative();
-    return Platform.OS === 'android' && NativeModules.IntentLauncher !== undefined;
+    if (!isReactNativeRuntime()) {
+      return false;
+    }
+
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+    return Platform.OS === 'android' && NativeModules.IntentLauncher?.launchApp !== undefined;
   }
 
   public async execute(params: Readonly<Record<string, unknown>>): Promise<unknown> {
-    const { NativeModules } = await getReactNative();
-    const packageName = typeof params.packageName === 'string' ? params.packageName : undefined;
+    const packageName = typeof params.packageName === 'string' ? params.packageName.trim() : '';
 
-    if (packageName === undefined || packageName.trim() === '') {
+    if (packageName === '') {
       throw new Error('Parameter packageName is required.');
     }
 
-    const intentLauncher = NativeModules.IntentLauncher;
-    if (intentLauncher === undefined) {
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+
+    if (Platform.OS !== 'android') {
+      throw new Error('Opening applications is supported only on Android.');
+    }
+
+    const launchApp = NativeModules.IntentLauncher?.launchApp;
+
+    if (launchApp === undefined) {
       throw new Error('IntentLauncher native module is unavailable.');
     }
 
-    await intentLauncher.launchApp(packageName);
+    await launchApp(packageName);
 
     return { opened: packageName };
   }

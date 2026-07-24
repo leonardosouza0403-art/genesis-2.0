@@ -1,9 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { DeviceCapability } from './DeviceCapability.js';
-import { Platform } from 'react-native';
-import { NativeModules } from 'react-native';
-
-const { BatteryModule } = NativeModules as { readonly BatteryModule?: { getBatteryLevel: () => Promise<number> } };
 
 export class ReadBatteryCapability extends DeviceCapability {
   public readonly id = 'read-battery';
@@ -19,15 +16,28 @@ export class ReadBatteryCapability extends DeviceCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    return Platform.OS === 'android' && BatteryModule !== undefined;
+    if (!isReactNativeRuntime()) {
+      return false;
+    }
+
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+    return Platform.OS === 'android' && NativeModules.BatteryModule !== undefined;
   }
 
   public async execute(): Promise<unknown> {
-    if (BatteryModule === undefined) {
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+
+    if (Platform.OS !== 'android') {
+      throw new Error('Battery reading is supported only on Android.');
+    }
+
+    const batteryModule = NativeModules.BatteryModule;
+
+    if (batteryModule === undefined) {
       throw new Error('BatteryModule native module is unavailable.');
     }
 
-    const batteryLevel = await BatteryModule.getBatteryLevel();
+    const batteryLevel = await batteryModule.getBatteryLevel();
 
     return { batteryLevel };
   }

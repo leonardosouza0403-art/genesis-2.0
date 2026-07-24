@@ -1,8 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { ApplicationCapability } from './ApplicationCapability.js';
-import { NativeModules, Platform } from 'react-native';
-
-const { IntentLauncher } = NativeModules as { readonly IntentLauncher?: { launchSettings: () => Promise<void> } };
 
 export class OpenSettingsCapability extends ApplicationCapability {
   public readonly id = 'open-settings';
@@ -18,15 +16,28 @@ export class OpenSettingsCapability extends ApplicationCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    return Platform.OS === 'android' && IntentLauncher !== undefined;
+    if (!isReactNativeRuntime()) {
+      return false;
+    }
+
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+    return Platform.OS === 'android' && NativeModules.IntentLauncher?.launchSettings !== undefined;
   }
 
   public async execute(): Promise<unknown> {
-    if (IntentLauncher === undefined) {
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+
+    if (Platform.OS !== 'android') {
+      throw new Error('Opening system settings is supported only on Android.');
+    }
+
+    const launchSettings = NativeModules.IntentLauncher?.launchSettings;
+
+    if (launchSettings === undefined) {
       throw new Error('IntentLauncher native module is unavailable.');
     }
 
-    await IntentLauncher.launchSettings();
+    await launchSettings();
 
     return { opened: 'settings' };
   }

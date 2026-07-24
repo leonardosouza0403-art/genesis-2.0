@@ -128,3 +128,5 @@ export class ProjectStatusCapability extends ProjectCapability {
     return 'MISSION-003.0';
   }
 }
+
+export const projectStatusCapability = new ProjectStatusCapability();

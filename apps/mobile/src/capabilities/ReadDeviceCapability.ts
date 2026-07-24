@@ -1,9 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { DeviceCapability } from './DeviceCapability.js';
-import { Platform } from 'react-native';
-import { NativeModules } from 'react-native';
-
-const { DeviceInfoModule } = NativeModules as { readonly DeviceInfoModule?: { getDeviceInfo: () => Promise<Readonly<Record<string, unknown>>> } };
 
 export class ReadDeviceCapability extends DeviceCapability {
   public readonly id = 'read-device';
@@ -19,15 +16,28 @@ export class ReadDeviceCapability extends DeviceCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    return Platform.OS === 'android' && DeviceInfoModule !== undefined;
+    if (!isReactNativeRuntime()) {
+      return false;
+    }
+
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+    return Platform.OS === 'android' && NativeModules.DeviceInfoModule !== undefined;
   }
 
   public async execute(): Promise<unknown> {
-    if (DeviceInfoModule === undefined) {
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+
+    if (Platform.OS !== 'android') {
+      throw new Error('Device information is supported only on Android.');
+    }
+
+    const deviceInfoModule = NativeModules.DeviceInfoModule;
+
+    if (deviceInfoModule === undefined) {
       throw new Error('DeviceInfoModule native module is unavailable.');
     }
 
-    const deviceInfo = await DeviceInfoModule.getDeviceInfo();
+    const deviceInfo = await deviceInfoModule.getDeviceInfo();
 
     return { deviceInfo };
   }

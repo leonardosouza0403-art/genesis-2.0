@@ -1,9 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { DeviceCapability } from './DeviceCapability.js';
-import { Platform } from 'react-native';
-import { NativeModules } from 'react-native';
-
-const { NetworkModule } = NativeModules as { readonly NetworkModule?: { getNetworkType: () => Promise<string>; isConnected: () => Promise<boolean> } };
 
 export class ReadNetworkCapability extends DeviceCapability {
   public readonly id = 'read-network';
@@ -19,16 +16,31 @@ export class ReadNetworkCapability extends DeviceCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    return Platform.OS === 'android' && NetworkModule !== undefined;
+    if (!isReactNativeRuntime()) {
+      return false;
+    }
+
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+    return Platform.OS === 'android' && NativeModules.NetworkModule !== undefined;
   }
 
   public async execute(): Promise<unknown> {
-    if (NetworkModule === undefined) {
+    const { NativeModules, Platform } = await loadReactNativeRuntime();
+
+    if (Platform.OS !== 'android') {
+      throw new Error('Network reading is supported only on Android.');
+    }
+
+    const networkModule = NativeModules.NetworkModule;
+
+    if (networkModule === undefined) {
       throw new Error('NetworkModule native module is unavailable.');
     }
 
-    const networkType = await NetworkModule.getNetworkType();
-    const connected = await NetworkModule.isConnected();
+    const [networkType, connected] = await Promise.all([
+      networkModule.getNetworkType(),
+      networkModule.isConnected()
+    ]);
 
     return { networkType, connected };
   }

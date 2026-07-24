@@ -1,6 +1,6 @@
+import { isReactNativeRuntime, loadReactNativeRuntime } from '../platform/ReactNativeRuntime.js';
 import { registerCapability } from './CapabilityRegistrar.js';
 import { ApplicationCapability } from './ApplicationCapability.js';
-import { Linking } from 'react-native';
 
 export class OpenUrlCapability extends ApplicationCapability {
   public readonly id = 'open-url';
@@ -16,16 +16,17 @@ export class OpenUrlCapability extends ApplicationCapability {
   }
 
   public async isSupported(): Promise<boolean> {
-    return true;
+    return isReactNativeRuntime();
   }
 
   public async execute(params: Readonly<Record<string, unknown>>): Promise<unknown> {
-    const url = typeof params.url === 'string' ? params.url : undefined;
+    const url = typeof params.url === 'string' ? params.url.trim() : '';
 
-    if (url === undefined || url.trim() === '') {
+    if (url === '') {
       throw new Error('Parameter url is required.');
     }
 
+    const { Linking } = await loadReactNativeRuntime();
     const supported = await Linking.canOpenURL(url);
 
     if (!supported) {
