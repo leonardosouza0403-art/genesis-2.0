@@ -79,6 +79,10 @@
     "./plugins": {
       "types": "./dist/plugins/index.d.ts",
       "default": "./dist/plugins/index.js"
+    },
+    "./security": {
+      "types": "./dist/security/index.d.ts",
+      "default": "./dist/security/index.js"
     }
   },
   "dependencies": {
