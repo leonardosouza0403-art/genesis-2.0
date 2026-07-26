@@ -35,6 +35,10 @@
     "./knowledge": {
       "types": "./dist/knowledge/index.d.ts",
       "default": "./dist/knowledge/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
     }
   },
   "dependencies": {
