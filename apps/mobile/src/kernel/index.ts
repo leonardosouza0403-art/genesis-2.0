@@ -8,3 +8,4 @@ export type {
   GenesisKernelSnapshot,
   GenesisKernelStatus
 } from "./GenesisKernelTypes.js";
+export { KernelUpdateController } from "./KernelUpdateController.js";
