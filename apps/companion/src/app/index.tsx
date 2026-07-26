@@ -9,9 +9,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-  ReactNativeGenesisEngine,
-  type NativeGenesisSnapshot
-} from "@genesis/mobile/native";
+  GenesisKernel,
+  type GenesisKernelSnapshot
+} from "@genesis/mobile/kernel";
 
 import {
   ExpoRuntimeAdapter,
@@ -45,42 +45,37 @@ function StatusRow({
 }
 
 export default function GenesisHomeScreen() {
-  const [snapshot, setSnapshot] =
-    useState<NativeGenesisSnapshot | null>(null);
+  const [kernel, setKernel] =
+    useState<GenesisKernel | null>(null);
 
-  const [error, setError] = useState<string | null>(null);
+  const [snapshot, setSnapshot] =
+    useState<GenesisKernelSnapshot | null>(null);
 
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setInterval> | undefined;
 
     async function boot(): Promise<void> {
-      try {
-        const engine = await ReactNativeGenesisEngine.initialize({
-          storage: new ExpoStorageAdapter(),
-          runtime: new ExpoRuntimeAdapter()
-        });
+      const initializedKernel = new GenesisKernel({
+        storage: new ExpoStorageAdapter(),
+        runtime: new ExpoRuntimeAdapter()
+      });
 
-        if (!active) {
-          return;
-        }
+      const initialSnapshot =
+        await initializedKernel.start();
 
-        setSnapshot(engine.snapshot());
-
-        timer = setInterval(() => {
-          if (active) {
-            setSnapshot(engine.snapshot());
-          }
-        }, 1000);
-      } catch (bootError) {
-        if (active) {
-          setError(
-            bootError instanceof Error
-              ? bootError.message
-              : "Falha desconhecida ao iniciar o GENESIS."
-          );
-        }
+      if (!active) {
+        return;
       }
+
+      setKernel(initializedKernel);
+      setSnapshot(initialSnapshot);
+
+      timer = setInterval(() => {
+        if (active) {
+          setSnapshot(initializedKernel.snapshot());
+        }
+      }, 1000);
     }
 
     void boot();
@@ -94,35 +89,45 @@ export default function GenesisHomeScreen() {
     };
   }, []);
 
-  if (error !== null) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.center}>
-          <Text style={styles.brand}>GENESIS 2.0</Text>
-          <Text style={styles.error}>FALHA NO BOOT</Text>
-          <Text style={styles.message}>{error}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   if (snapshot === null) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.center}>
           <Text style={styles.brand}>GENESIS 2.0</Text>
+
           <ActivityIndicator
             size="large"
             color="#20E070"
             style={styles.loader}
           />
+
           <Text style={styles.message}>
-            Inicializando engine...
+            Inicializando Kernel...
           </Text>
         </View>
       </SafeAreaView>
     );
   }
+
+  if (
+    snapshot.status === "failed" ||
+    snapshot.error !== null
+  ) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.center}>
+          <Text style={styles.brand}>GENESIS 2.0</Text>
+          <Text style={styles.error}>FALHA NO KERNEL</Text>
+
+          <Text style={styles.message}>
+            {snapshot.error ?? "Erro desconhecido."}
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const engine = snapshot.engine;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -131,7 +136,9 @@ export default function GenesisHomeScreen() {
 
         <View style={styles.onlineContainer}>
           <View style={styles.onlineDot} />
-          <Text style={styles.onlineText}>ONLINE</Text>
+          <Text style={styles.onlineText}>
+            {snapshot.status.toUpperCase()}
+          </Text>
         </View>
 
         <Text style={styles.greeting}>
@@ -139,27 +146,78 @@ export default function GenesisHomeScreen() {
         </Text>
 
         <View style={styles.panel}>
-          <StatusRow label="Engine" value={snapshot.engineStatus} />
-          <StatusRow label="Memória" value={snapshot.memoryStatus} />
-          <StatusRow label="Sessão" value={snapshot.sessionStatus} />
-          <StatusRow label="Plataforma" value={snapshot.platform} />
-          <StatusRow label="Boots" value={snapshot.bootCount} />
+          <StatusRow
+            label="Kernel"
+            value={snapshot.status}
+          />
+
+          <StatusRow
+            label="Engine"
+            value={engine?.engineStatus ?? "starting"}
+          />
+
+          <StatusRow
+            label="Memória"
+            value={engine?.memoryStatus ?? "starting"}
+          />
+
+          <StatusRow
+            label="Conhecimento"
+            value={engine?.knowledgeStatus ?? "starting"}
+          />
+
+          <StatusRow
+            label="Sessão"
+            value={engine?.sessionStatus ?? "starting"}
+          />
+
+          <StatusRow
+            label="Plataforma"
+            value={engine?.platform ?? "unknown"}
+          />
+
+          <StatusRow
+            label="Boots"
+            value={engine?.bootCount ?? 0}
+          />
+
+          <StatusRow
+            label="Memórias"
+            value={engine?.memoryCount ?? 0}
+          />
+
+          <StatusRow
+            label="Conhecimentos"
+            value={engine?.knowledgeCount ?? 0}
+          />
+
           <StatusRow
             label="Capabilities"
-            value={snapshot.capabilities.length}
+            value={engine?.capabilities.length ?? 0}
           />
-          <StatusRow label="Versão" value={snapshot.version} />
+
+          <StatusRow
+            label="Versão"
+            value={engine?.version ?? "unknown"}
+          />
+
           <StatusRow
             label="Uptime"
-            value={formatUptime(snapshot.uptimeMilliseconds)}
+            value={formatUptime(
+              engine?.uptimeMilliseconds ?? 0
+            )}
           />
         </View>
 
         <Text style={styles.message}>
-          Identidade e sessão persistentes carregadas.
+          Kernel, cérebro, memória, conhecimento e agente carregados.
         </Text>
 
-        <Text style={styles.ready}>Estou pronto.</Text>
+        <Text style={styles.ready}>
+          {kernel === null
+            ? "Inicializando..."
+            : "Estou pronto."}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
