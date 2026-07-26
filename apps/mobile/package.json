@@ -39,6 +39,10 @@
     "./ai": {
       "types": "./dist/ai/index.d.ts",
       "default": "./dist/ai/index.js"
+    },
+    "./cognitive": {
+      "types": "./dist/cognitive/index.d.ts",
+      "default": "./dist/cognitive/index.js"
     }
   },
   "dependencies": {
