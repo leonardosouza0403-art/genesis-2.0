@@ -1,4 +1,5 @@
 export { AiCore } from "./AiCore.js";
+export { LocalAiProvider } from "./LocalAiProvider.js";
 
 export type { AiProvider } from "./AiProvider.js";
 
