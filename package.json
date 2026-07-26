@@ -22,6 +22,8 @@
     "validate": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "devDependencies": {
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.0",
     "typescript": "^5.9.3"
   }
 }

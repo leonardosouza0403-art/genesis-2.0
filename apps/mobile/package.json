@@ -18,5 +18,15 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/react-native": "^0.72.0"
+  },
+  "exports": {
+    "./status": {
+      "types": "./dist/status/index.d.ts",
+      "default": "./dist/status/index.js"
+    },
+    "./native": {
+      "types": "./dist/native/index.d.ts",
+      "default": "./dist/native/index.js"
+    }
   }
 }
