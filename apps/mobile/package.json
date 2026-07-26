@@ -47,6 +47,10 @@
     "./orchestrator": {
       "types": "./dist/orchestrator/index.d.ts",
       "default": "./dist/orchestrator/index.js"
+    },
+    "./brain": {
+      "types": "./dist/brain/index.d.ts",
+      "default": "./dist/brain/index.js"
     }
   },
   "dependencies": {
