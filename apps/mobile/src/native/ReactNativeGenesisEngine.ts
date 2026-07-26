@@ -6,6 +6,16 @@ import type {
 import { CapabilityExecutor } from "../capabilities/CapabilityExecutor.js";
 import type { CapabilityExecutionResult } from "../capabilities/CapabilityExecutor.js";
 import type { CapabilityRegistry } from "../capabilities/CapabilityRegistry.js";
+import { KnowledgeKernel } from "../knowledge/index.js";
+import type {
+  KnowledgeNode,
+  KnowledgeRelation
+} from "../knowledge/index.js";
+import { MemoryKernel } from "../memory/index.js";
+import type {
+  MemoryEntry,
+  MemoryValue
+} from "../memory/index.js";
 import { createReactNativeCapabilityRegistry } from "./ReactNativeCapabilityBootstrap.js";
 
 export type NativeEngineStatus =
@@ -22,6 +32,7 @@ export interface NativeGenesisSnapshot {
   readonly online: boolean;
   readonly engineStatus: NativeEngineStatus;
   readonly memoryStatus: "ready";
+  readonly knowledgeStatus: "ready";
   readonly sessionStatus: "active";
   readonly version: string;
   readonly platform: string;
@@ -31,6 +42,8 @@ export interface NativeGenesisSnapshot {
   readonly ownerId: string;
   readonly sessionId: string;
   readonly bootCount: number;
+  readonly memoryCount: number;
+  readonly knowledgeCount: number;
   readonly capabilities: readonly NativeCapabilityDescriptor[];
 }
 
@@ -57,16 +70,28 @@ function createIdentifier(prefix: string): string {
 export class ReactNativeGenesisEngine {
   private readonly bootTimestamp: number;
   private readonly executor: CapabilityExecutor;
+  private readonly memory: MemoryKernel;
+  private readonly knowledge: KnowledgeKernel;
+
+  private memoryEntryCount: number;
+  private knowledgeNodeCount: number;
 
   private constructor(
     private readonly registry: CapabilityRegistry,
+    private readonly storage: StorageAdapter,
     private readonly runtime: RuntimeAdapter,
     private readonly ownerIdentifier: string,
     private readonly currentSessionId: string,
-    private readonly currentBootCount: number
+    private readonly currentBootCount: number,
+    memoryEntryCount: number,
+    knowledgeNodeCount: number
   ) {
     this.bootTimestamp = Date.now();
     this.executor = new CapabilityExecutor(registry);
+    this.memory = new MemoryKernel(storage);
+    this.knowledge = new KnowledgeKernel(storage);
+    this.memoryEntryCount = memoryEntryCount;
+    this.knowledgeNodeCount = knowledgeNodeCount;
   }
 
   public static async initialize(
@@ -76,6 +101,14 @@ export class ReactNativeGenesisEngine {
     const identity = await loadOrCreateIdentity(options.storage);
     const sessionId = createIdentifier("session");
     const bootCount = await incrementBootCount(options.storage);
+
+    const memory = new MemoryKernel(options.storage);
+    const knowledge = new KnowledgeKernel(options.storage);
+
+    const [memorySnapshot, knowledgeSnapshot] = await Promise.all([
+      memory.snapshot(),
+      knowledge.snapshot()
+    ]);
 
     await options.storage.set(
       CurrentSessionKey,
@@ -89,10 +122,13 @@ export class ReactNativeGenesisEngine {
 
     return new ReactNativeGenesisEngine(
       registry,
+      options.storage,
       options.runtime,
       identity.ownerId,
       sessionId,
-      bootCount
+      bootCount,
+      memorySnapshot.count,
+      knowledgeSnapshot.nodes.length
     );
   }
 
@@ -106,6 +142,7 @@ export class ReactNativeGenesisEngine {
       online: true,
       engineStatus: "running",
       memoryStatus: "ready",
+      knowledgeStatus: "ready",
       sessionStatus: "active",
       version: Version,
       platform: this.runtime.platform,
@@ -115,8 +152,49 @@ export class ReactNativeGenesisEngine {
       ownerId: this.ownerIdentifier,
       sessionId: this.currentSessionId,
       bootCount: this.currentBootCount,
+      memoryCount: this.memoryEntryCount,
+      knowledgeCount: this.knowledgeNodeCount,
       capabilities
     };
+  }
+
+  public async remember(
+    key: string,
+    value: MemoryValue
+  ): Promise<MemoryEntry> {
+    const entry = await this.memory.remember(key, value);
+    const snapshot = await this.memory.snapshot();
+    this.memoryEntryCount = snapshot.count;
+    return entry;
+  }
+
+  public recall(key: string): Promise<MemoryEntry | null> {
+    return this.memory.recall(key);
+  }
+
+  public async forget(key: string): Promise<boolean> {
+    const removed = await this.memory.forget(key);
+    const snapshot = await this.memory.snapshot();
+    this.memoryEntryCount = snapshot.count;
+    return removed;
+  }
+
+  public async addKnowledgeNode(
+    node: KnowledgeNode
+  ): Promise<void> {
+    await this.knowledge.addNode(node);
+    const snapshot = await this.knowledge.snapshot();
+    this.knowledgeNodeCount = snapshot.nodes.length;
+  }
+
+  public addKnowledgeRelation(
+    relation: KnowledgeRelation
+  ): Promise<void> {
+    return this.knowledge.addRelation(relation);
+  }
+
+  public searchKnowledge(text: string): Promise<KnowledgeNode[]> {
+    return this.knowledge.search(text);
   }
 
   public executeCapability(
