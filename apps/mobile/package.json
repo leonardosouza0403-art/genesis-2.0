@@ -55,6 +55,10 @@
     "./kernel": {
       "types": "./dist/kernel/index.d.ts",
       "default": "./dist/kernel/index.js"
+    },
+    "./agent": {
+      "types": "./dist/agent/index.d.ts",
+      "default": "./dist/agent/index.js"
     }
   },
   "dependencies": {
