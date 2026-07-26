@@ -67,6 +67,10 @@
     "./wakeword": {
       "types": "./dist/wakeword/index.d.ts",
       "default": "./dist/wakeword/index.js"
+    },
+    "./conversation": {
+      "types": "./dist/conversation/index.d.ts",
+      "default": "./dist/conversation/index.js"
     }
   },
   "dependencies": {
