@@ -51,6 +51,10 @@
     "./brain": {
       "types": "./dist/brain/index.d.ts",
       "default": "./dist/brain/index.js"
+    },
+    "./kernel": {
+      "types": "./dist/kernel/index.d.ts",
+      "default": "./dist/kernel/index.js"
     }
   },
   "dependencies": {
