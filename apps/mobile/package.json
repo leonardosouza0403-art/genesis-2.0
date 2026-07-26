@@ -43,6 +43,10 @@
     "./cognitive": {
       "types": "./dist/cognitive/index.d.ts",
       "default": "./dist/cognitive/index.js"
+    },
+    "./orchestrator": {
+      "types": "./dist/orchestrator/index.d.ts",
+      "default": "./dist/orchestrator/index.js"
     }
   },
   "dependencies": {
