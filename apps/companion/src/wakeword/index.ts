@@ -1,0 +1,3 @@
+export {
+  PorcupineWakeWordProvider
+} from "./PorcupineWakeWordProvider";

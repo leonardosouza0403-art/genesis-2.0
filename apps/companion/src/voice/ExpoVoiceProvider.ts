@@ -1,3 +1,4 @@
+import Voice from "@react-native-voice/voice";
 import * as Speech from "expo-speech";
 
 import type {
@@ -17,9 +18,77 @@ export class ExpoVoiceProvider implements VoiceProvider {
   ) {}
 
   public async listen(): Promise<string> {
-    throw new Error(
-      "Speech recognition provider is not configured."
-    );
+    return new Promise<string>((resolve, reject) => {
+      let finished = false;
+
+      const cleanup = async (): Promise<void> => {
+        Voice.onSpeechResults = () => {};
+        Voice.onSpeechError = () => {};
+
+        try {
+          await Voice.destroy();
+        } catch {
+          // Ignora falha de limpeza.
+        }
+      };
+
+      Voice.onSpeechResults = (event) => {
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+
+        const result = event.value?.[0]?.trim() ?? "";
+
+        void cleanup().finally(() => {
+          if (result.length === 0) {
+            reject(
+              new Error("Nenhuma fala foi reconhecida.")
+            );
+            return;
+          }
+
+          resolve(result);
+        });
+      };
+
+      Voice.onSpeechError = (event) => {
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+
+        void cleanup().finally(() => {
+          reject(
+            new Error(
+              typeof event.error?.message === "string"
+                ? event.error.message
+                : JSON.stringify(event.error)
+            )
+          );
+        });
+      };
+
+      void Voice.start(
+        this.options.language ?? "pt-BR"
+      ).catch((error: unknown) => {
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+
+        void cleanup().finally(() => {
+          reject(
+            error instanceof Error
+              ? error
+              : new Error(String(error))
+          );
+        });
+      });
+    });
   }
 
   public async speak(text: string): Promise<void> {
@@ -53,14 +122,17 @@ export class ExpoVoiceProvider implements VoiceProvider {
   }
 
   public async stop(): Promise<void> {
-    await Speech.stop();
+    await Promise.allSettled([
+      Speech.stop(),
+      Voice.stop()
+    ]);
   }
 
-  public async isSpeaking(): Promise<boolean> {
+  public isSpeaking(): Promise<boolean> {
     return Speech.isSpeakingAsync();
   }
 
-  public async availableVoices():
+  public availableVoices():
     Promise<readonly Speech.Voice[]> {
     return Speech.getAvailableVoicesAsync();
   }

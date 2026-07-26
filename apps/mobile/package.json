@@ -63,6 +63,10 @@
     "./voice": {
       "types": "./dist/voice/index.d.ts",
       "default": "./dist/voice/index.js"
+    },
+    "./wakeword": {
+      "types": "./dist/wakeword/index.d.ts",
+      "default": "./dist/wakeword/index.js"
     }
   },
   "dependencies": {
