@@ -4,5 +4,6 @@ export { createReactNativeCapabilityRegistry } from "./ReactNativeCapabilityBoot
 export type {
   NativeCapabilityDescriptor,
   NativeEngineStatus,
-  NativeGenesisSnapshot
+  NativeGenesisSnapshot,
+  ReactNativeGenesisEngineOptions
 } from "./ReactNativeGenesisEngine.js";

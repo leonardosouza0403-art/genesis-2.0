@@ -13,6 +13,11 @@ import {
   type NativeGenesisSnapshot
 } from "@genesis/mobile/native";
 
+import {
+  ExpoRuntimeAdapter,
+  ExpoStorageAdapter
+} from "@/platform";
+
 function formatUptime(milliseconds: number): string {
   const totalSeconds = Math.floor(milliseconds / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -40,9 +45,6 @@ function StatusRow({
 }
 
 export default function GenesisHomeScreen() {
-  const [engine, setEngine] =
-    useState<ReactNativeGenesisEngine | null>(null);
-
   const [snapshot, setSnapshot] =
     useState<NativeGenesisSnapshot | null>(null);
 
@@ -54,19 +56,20 @@ export default function GenesisHomeScreen() {
 
     async function boot(): Promise<void> {
       try {
-        const initializedEngine =
-          await ReactNativeGenesisEngine.initialize();
+        const engine = await ReactNativeGenesisEngine.initialize({
+          storage: new ExpoStorageAdapter(),
+          runtime: new ExpoRuntimeAdapter()
+        });
 
         if (!active) {
           return;
         }
 
-        setEngine(initializedEngine);
-        setSnapshot(initializedEngine.snapshot());
+        setSnapshot(engine.snapshot());
 
         timer = setInterval(() => {
           if (active) {
-            setSnapshot(initializedEngine.snapshot());
+            setSnapshot(engine.snapshot());
           }
         }, 1000);
       } catch (bootError) {
@@ -103,7 +106,7 @@ export default function GenesisHomeScreen() {
     );
   }
 
-  if (engine === null || snapshot === null) {
+  if (snapshot === null) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.center}>
@@ -136,26 +139,16 @@ export default function GenesisHomeScreen() {
         </Text>
 
         <View style={styles.panel}>
-          <StatusRow
-            label="Engine"
-            value={snapshot.engineStatus}
-          />
-          <StatusRow
-            label="Memória"
-            value={snapshot.memoryStatus}
-          />
-          <StatusRow
-            label="Sessão"
-            value={snapshot.sessionStatus}
-          />
+          <StatusRow label="Engine" value={snapshot.engineStatus} />
+          <StatusRow label="Memória" value={snapshot.memoryStatus} />
+          <StatusRow label="Sessão" value={snapshot.sessionStatus} />
+          <StatusRow label="Plataforma" value={snapshot.platform} />
+          <StatusRow label="Boots" value={snapshot.bootCount} />
           <StatusRow
             label="Capabilities"
             value={snapshot.capabilities.length}
           />
-          <StatusRow
-            label="Versão"
-            value={snapshot.version}
-          />
+          <StatusRow label="Versão" value={snapshot.version} />
           <StatusRow
             label="Uptime"
             value={formatUptime(snapshot.uptimeMilliseconds)}
@@ -163,12 +156,10 @@ export default function GenesisHomeScreen() {
         </View>
 
         <Text style={styles.message}>
-          Todos os sistemas móveis estão operacionais.
+          Identidade e sessão persistentes carregadas.
         </Text>
 
-        <Text style={styles.ready}>
-          Estou pronto.
-        </Text>
+        <Text style={styles.ready}>Estou pronto.</Text>
       </ScrollView>
     </SafeAreaView>
   );

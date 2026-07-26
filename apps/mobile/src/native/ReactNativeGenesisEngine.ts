@@ -1,3 +1,8 @@
+import type {
+  RuntimeAdapter,
+  StorageAdapter
+} from "@genesis/platform";
+
 import { CapabilityExecutor } from "../capabilities/CapabilityExecutor.js";
 import type { CapabilityExecutionResult } from "../capabilities/CapabilityExecutor.js";
 import type { CapabilityRegistry } from "../capabilities/CapabilityRegistry.js";
@@ -19,31 +24,76 @@ export interface NativeGenesisSnapshot {
   readonly memoryStatus: "ready";
   readonly sessionStatus: "active";
   readonly version: string;
+  readonly platform: string;
+  readonly runtimeVersion: string;
   readonly bootTime: number;
   readonly uptimeMilliseconds: number;
+  readonly ownerId: string;
   readonly sessionId: string;
+  readonly bootCount: number;
   readonly capabilities: readonly NativeCapabilityDescriptor[];
 }
 
-function createSessionId(): string {
+export interface ReactNativeGenesisEngineOptions {
+  readonly storage: StorageAdapter;
+  readonly runtime: RuntimeAdapter;
+}
+
+interface PersistedIdentity {
+  readonly ownerId: string;
+  readonly createdAt: string;
+}
+
+const IdentityKey = "genesis.identity";
+const CurrentSessionKey = "genesis.currentSession";
+const BootCountKey = "genesis.bootCount";
+const Version = "2.0.0-alpha.2";
+
+function createIdentifier(prefix: string): string {
   const randomPart = Math.random().toString(36).slice(2);
-  return `genesis-${Date.now()}-${randomPart}`;
+  return `${prefix}-${Date.now()}-${randomPart}`;
 }
 
 export class ReactNativeGenesisEngine {
   private readonly bootTimestamp: number;
-  private readonly currentSessionId: string;
   private readonly executor: CapabilityExecutor;
 
-  private constructor(private readonly registry: CapabilityRegistry) {
+  private constructor(
+    private readonly registry: CapabilityRegistry,
+    private readonly runtime: RuntimeAdapter,
+    private readonly ownerIdentifier: string,
+    private readonly currentSessionId: string,
+    private readonly currentBootCount: number
+  ) {
     this.bootTimestamp = Date.now();
-    this.currentSessionId = createSessionId();
     this.executor = new CapabilityExecutor(registry);
   }
 
-  public static async initialize(): Promise<ReactNativeGenesisEngine> {
+  public static async initialize(
+    options: ReactNativeGenesisEngineOptions
+  ): Promise<ReactNativeGenesisEngine> {
     const registry = await createReactNativeCapabilityRegistry();
-    return new ReactNativeGenesisEngine(registry);
+    const identity = await loadOrCreateIdentity(options.storage);
+    const sessionId = createIdentifier("session");
+    const bootCount = await incrementBootCount(options.storage);
+
+    await options.storage.set(
+      CurrentSessionKey,
+      JSON.stringify({
+        sessionId,
+        ownerId: identity.ownerId,
+        startedAt: new Date().toISOString(),
+        bootCount
+      })
+    );
+
+    return new ReactNativeGenesisEngine(
+      registry,
+      options.runtime,
+      identity.ownerId,
+      sessionId,
+      bootCount
+    );
   }
 
   public snapshot(): NativeGenesisSnapshot {
@@ -57,10 +107,14 @@ export class ReactNativeGenesisEngine {
       engineStatus: "running",
       memoryStatus: "ready",
       sessionStatus: "active",
-      version: "2.0.0-alpha.2",
+      version: Version,
+      platform: this.runtime.platform,
+      runtimeVersion: this.runtime.version,
       bootTime: this.bootTimestamp,
       uptimeMilliseconds: Math.max(0, Date.now() - this.bootTimestamp),
+      ownerId: this.ownerIdentifier,
       sessionId: this.currentSessionId,
+      bootCount: this.currentBootCount,
       capabilities
     };
   }
@@ -71,4 +125,49 @@ export class ReactNativeGenesisEngine {
   ): Promise<CapabilityExecutionResult> {
     return this.executor.execute(id, params);
   }
+}
+
+async function loadOrCreateIdentity(
+  storage: StorageAdapter
+): Promise<PersistedIdentity> {
+  const storedIdentity = await storage.get(IdentityKey);
+
+  if (storedIdentity !== null) {
+    try {
+      const parsed = JSON.parse(storedIdentity) as PersistedIdentity;
+
+      if (
+        typeof parsed.ownerId === "string" &&
+        typeof parsed.createdAt === "string"
+      ) {
+        return parsed;
+      }
+    } catch {
+      await storage.remove(IdentityKey);
+    }
+  }
+
+  const identity: PersistedIdentity = {
+    ownerId: createIdentifier("owner"),
+    createdAt: new Date().toISOString()
+  };
+
+  await storage.set(IdentityKey, JSON.stringify(identity));
+
+  return identity;
+}
+
+async function incrementBootCount(
+  storage: StorageAdapter
+): Promise<number> {
+  const storedValue = await storage.get(BootCountKey);
+  const previousValue =
+    storedValue === null ? 0 : Number.parseInt(storedValue, 10);
+
+  const nextValue =
+    Number.isFinite(previousValue) ? previousValue + 1 : 1;
+
+  await storage.set(BootCountKey, String(nextValue));
+
+  return nextValue;
 }

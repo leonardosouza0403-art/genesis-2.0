@@ -28,5 +28,8 @@
       "types": "./dist/native/index.d.ts",
       "default": "./dist/native/index.js"
     }
+  },
+  "dependencies": {
+    "@genesis/platform": "2.0.0-alpha.2"
   }
 }
