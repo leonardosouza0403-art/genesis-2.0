@@ -1,4 +1,3 @@
-import type { AgentSnapshot } from "../agent/index.js";
 import type { NativeGenesisSnapshot } from "../native/index.js";
 
 export type GenesisKernelStatus =
@@ -14,5 +13,4 @@ export interface GenesisKernelSnapshot {
   readonly stoppedAt: string | null;
   readonly error: string | null;
   readonly engine: NativeGenesisSnapshot | null;
-  readonly agent: AgentSnapshot | null;
 }
