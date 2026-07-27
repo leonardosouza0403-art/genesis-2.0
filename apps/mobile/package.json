@@ -119,6 +119,10 @@
     "./bootstrap": {
       "types": "./dist/bootstrap/index.d.ts",
       "default": "./dist/bootstrap/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
     }
   },
   "dependencies": {
