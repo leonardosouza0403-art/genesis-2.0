@@ -87,6 +87,10 @@
     "./update": {
       "types": "./dist/update/index.d.ts",
       "default": "./dist/update/index.js"
+    },
+    "./marketplace": {
+      "types": "./dist/marketplace/index.d.ts",
+      "default": "./dist/marketplace/index.js"
     }
   },
   "dependencies": {
