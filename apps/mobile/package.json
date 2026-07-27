@@ -139,6 +139,10 @@
     "./registry": {
       "types": "./dist/registry/index.d.ts",
       "default": "./dist/registry/index.js"
+    },
+    "./runtime-manager": {
+      "types": "./dist/runtime-manager/index.d.ts",
+      "default": "./dist/runtime-manager/index.js"
     }
   },
   "dependencies": {
