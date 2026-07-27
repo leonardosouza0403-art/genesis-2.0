@@ -99,6 +99,10 @@
     "./profile": {
       "types": "./dist/profile/index.d.ts",
       "default": "./dist/profile/index.js"
+    },
+    "./session": {
+      "types": "./dist/session/index.d.ts",
+      "default": "./dist/session/index.js"
     }
   },
   "dependencies": {
