@@ -79,6 +79,10 @@
     "./plugins": {
       "types": "./dist/plugins/index.d.ts",
       "default": "./dist/plugins/index.js"
+    },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "default": "./dist/events/index.js"
     }
   },
   "dependencies": {
