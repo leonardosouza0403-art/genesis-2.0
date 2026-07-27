@@ -147,6 +147,10 @@
     "./service-lifecycle": {
       "types": "./dist/service-lifecycle/index.d.ts",
       "default": "./dist/service-lifecycle/index.js"
+    },
+    "./os": {
+      "types": "./dist/os/index.d.ts",
+      "default": "./dist/os/index.js"
     }
   },
   "dependencies": {
