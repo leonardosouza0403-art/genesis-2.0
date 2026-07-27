@@ -1,18 +1,18 @@
 import type{
 GenesisPlugin,
-PluginSnapshot
-}from"./PluginTypes.js";
+PluginRuntimeSnapshot
+}from"./PluginRuntimeTypes.js";
 
 export class PluginRuntime{
 
 private readonly plugins=
 new Map<string,GenesisPlugin>();
 
-public async register(
+private running=false;
+
+public register(
 plugin:GenesisPlugin
 ){
-
-await plugin.initialize();
 
 this.plugins.set(
 plugin.id,
@@ -21,47 +21,40 @@ plugin
 
 }
 
-public async unregister(
-id:string
-){
+public async start(){
 
-const plugin=
-this.plugins.get(id);
+for(const plugin of this.plugins.values()){
 
-if(!plugin)return;
-
-await plugin.shutdown();
-
-this.plugins.delete(id);
+await plugin.start();
 
 }
 
-public list(){
+this.running=true;
 
-return[
-...this.plugins.values()
-];
+}
+
+public async stop(){
+
+for(const plugin of this.plugins.values()){
+
+await plugin.stop();
+
+}
+
+this.running=false;
 
 }
 
 public snapshot():
-PluginSnapshot{
-
-const list=this.list();
+PluginRuntimeSnapshot{
 
 return{
 
-total:list.length,
+running:this.running,
 
-enabled:list.filter(
-p=>p.enabled
-).length,
-
-disabled:list.filter(
-p=>!p.enabled
-).length,
-
-plugins:list
+loadedPlugins:[
+...this.plugins.keys()
+]
 
 };
 

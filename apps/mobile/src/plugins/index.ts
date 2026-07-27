@@ -1,2 +1,2 @@
 export * from "./PluginRuntime.js";
-export * from "./PluginTypes.js";
+export * from "./PluginRuntimeTypes.js";
