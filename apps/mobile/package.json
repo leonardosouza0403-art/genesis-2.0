@@ -127,6 +127,10 @@
     "./monitor": {
       "types": "./dist/monitor/index.d.ts",
       "default": "./dist/monitor/index.js"
+    },
+    "./health": {
+      "types": "./dist/health/index.d.ts",
+      "default": "./dist/health/index.js"
     }
   },
   "dependencies": {
