@@ -111,6 +111,10 @@
     "./config": {
       "types": "./dist/config/index.d.ts",
       "default": "./dist/config/index.js"
+    },
+    "./container": {
+      "types": "./dist/container/index.d.ts",
+      "default": "./dist/container/index.js"
     }
   },
   "dependencies": {
