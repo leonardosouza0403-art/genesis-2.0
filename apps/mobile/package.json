@@ -143,6 +143,10 @@
     "./runtime-manager": {
       "types": "./dist/runtime-manager/index.d.ts",
       "default": "./dist/runtime-manager/index.js"
+    },
+    "./service-lifecycle": {
+      "types": "./dist/service-lifecycle/index.d.ts",
+      "default": "./dist/service-lifecycle/index.js"
     }
   },
   "dependencies": {
