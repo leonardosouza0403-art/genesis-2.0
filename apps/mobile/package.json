@@ -107,6 +107,10 @@
     "./settings": {
       "types": "./dist/settings/index.d.ts",
       "default": "./dist/settings/index.js"
+    },
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "default": "./dist/config/index.js"
     }
   },
   "dependencies": {
