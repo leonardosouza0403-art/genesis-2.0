@@ -95,6 +95,10 @@
     "./telemetry": {
       "types": "./dist/telemetry/index.d.ts",
       "default": "./dist/telemetry/index.js"
+    },
+    "./profile": {
+      "types": "./dist/profile/index.d.ts",
+      "default": "./dist/profile/index.js"
     }
   },
   "dependencies": {
