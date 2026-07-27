@@ -115,6 +115,10 @@
     "./container": {
       "types": "./dist/container/index.d.ts",
       "default": "./dist/container/index.js"
+    },
+    "./bootstrap": {
+      "types": "./dist/bootstrap/index.d.ts",
+      "default": "./dist/bootstrap/index.js"
     }
   },
   "dependencies": {
