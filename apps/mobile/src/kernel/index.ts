@@ -9,3 +9,8 @@ export type {
   GenesisKernelStatus
 } from "./GenesisKernelTypes.js";
 export { KernelUpdateController } from "./KernelUpdateController.js";
+export { MarketplaceController } from "./MarketplaceController.js";
+
+export type {
+  MarketplaceSnapshot
+} from "./MarketplaceController.js";
