@@ -151,6 +151,10 @@
     "./os": {
       "types": "./dist/os/index.d.ts",
       "default": "./dist/os/index.js"
+    },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "default": "./dist/shell/index.js"
     }
   },
   "dependencies": {
