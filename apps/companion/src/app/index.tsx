@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import * as Speech from "expo-speech";
 import {
   ActivityIndicator,
   FlatList,
@@ -80,6 +81,28 @@ function getStatusText(
   return shellSnapshot.status.toUpperCase();
 }
 
+async function speakGenesis(
+  text: string
+): Promise<void> {
+  const normalized = text.trim();
+
+  if (normalized.length === 0) {
+    return;
+  }
+
+  await Speech.stop();
+
+  await new Promise<void>((resolve) => {
+    Speech.speak(normalized, {
+      language: "pt-BR",
+      rate: 0.92,
+      pitch: 1,
+      onDone: resolve,
+      onStopped: resolve,
+      onError: () => resolve()
+    });
+  });
+}
 export default function GenesisHomeScreen() {
   const listReference =
     useRef<FlatList<ChatMessage> | null>(null);
@@ -130,7 +153,7 @@ export default function GenesisHomeScreen() {
         if (initializedShell.status !== "ready") {
           throw new Error(
             initializedShell.error ??
-              "O Genesis Shell nÃ£o ficou pronto."
+              "O Genesis Shell nÃƒÂ£o ficou pronto."
           );
         }
 
@@ -138,9 +161,9 @@ export default function GenesisHomeScreen() {
           createMessage(
             "assistant",
             [
-              "OlÃ¡, Senhor Leonardo.",
-              "GENESIS 2.0 estÃ¡ online.",
-              "Kernel, cÃ©rebro, memÃ³ria, conhecimento e agente foram inicializados.",
+              "OlÃƒÂ¡, Senhor Leonardo.",
+              "GENESIS 2.0 estÃƒÂ¡ online.",
+              "Kernel, cÃƒÂ©rebro, memÃƒÂ³ria, conhecimento e agente foram inicializados.",
               "Como posso ajudar?"
             ].join("\n")
           )
@@ -210,13 +233,17 @@ export default function GenesisHomeScreen() {
         response.success
           ? response.output
           : response.error ??
-              "NÃ£o foi possÃ­vel processar o comando."
+              "NÃƒÂ£o foi possÃƒÂ­vel processar o comando."
       );
 
       setMessages((current) => [
         ...current,
         assistantMessage
       ]);
+
+      if (response.success) {
+        await speakGenesis(assistantMessage.content);
+      }
 
       setShellSnapshot(shell.snapshot());
       setOsSnapshot(os.snapshot());
@@ -265,7 +292,7 @@ export default function GenesisHomeScreen() {
           </Text>
 
           <Text style={styles.bootMessage}>
-            Carregando Kernel, Brain, AI, memÃ³ria e agentes...
+            Carregando Kernel, Brain, AI, memÃƒÂ³ria e agentes...
           </Text>
 
           {bootError !== null && (
