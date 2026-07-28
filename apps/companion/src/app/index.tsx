@@ -5,12 +5,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   View
 } from "react-native";
+
+import {
+  SafeAreaView
+} from "react-native-safe-area-context";
 
 import {
   GenesisOS,
@@ -127,7 +130,7 @@ export default function GenesisHomeScreen() {
         if (initializedShell.status !== "ready") {
           throw new Error(
             initializedShell.error ??
-              "O Genesis Shell não ficou pronto."
+              "O Genesis Shell nÃ£o ficou pronto."
           );
         }
 
@@ -135,9 +138,9 @@ export default function GenesisHomeScreen() {
           createMessage(
             "assistant",
             [
-              "Olá, Senhor Leonardo.",
-              "GENESIS 2.0 está online.",
-              "Kernel, cérebro, memória, conhecimento e agente foram inicializados.",
+              "OlÃ¡, Senhor Leonardo.",
+              "GENESIS 2.0 estÃ¡ online.",
+              "Kernel, cÃ©rebro, memÃ³ria, conhecimento e agente foram inicializados.",
               "Como posso ajudar?"
             ].join("\n")
           )
@@ -207,7 +210,7 @@ export default function GenesisHomeScreen() {
         response.success
           ? response.output
           : response.error ??
-              "Não foi possível processar o comando."
+              "NÃ£o foi possÃ­vel processar o comando."
       );
 
       setMessages((current) => [
@@ -262,7 +265,7 @@ export default function GenesisHomeScreen() {
           </Text>
 
           <Text style={styles.bootMessage}>
-            Carregando Kernel, Brain, AI, memória e agentes...
+            Carregando Kernel, Brain, AI, memÃ³ria e agentes...
           </Text>
 
           {bootError !== null && (
